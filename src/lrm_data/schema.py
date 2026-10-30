@@ -6,7 +6,6 @@ factor or product-to-akad mapping is defined or implicitly accepted here.
 from __future__ import annotations
 
 import json
-import re
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum

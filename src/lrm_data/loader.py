@@ -8,7 +8,7 @@ import hashlib
 import io
 import zipfile
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import PurePath
 from typing import Any
 
@@ -138,7 +138,8 @@ def _headers(ws: Any, dataset: DatasetType) -> tuple[str, ...]:
 def load_xlsx(file_name: str, payload: bytes) -> LoadResult:
     """Load known schema or return controlled DQ failures; input bytes never persisted."""
     sha = hashlib.sha256(payload).hexdigest()
-    fail = lambda rid, typ, row, col, msg: _failure(rid, typ, row, col, msg, sha)
+    def fail(rid, typ, row, col, msg):
+        return _failure(rid, typ, row, col, msg, sha)
     if not _safe_filename(file_name):
         return LoadResult(None, (fail("DQ-FILE-001", None, None, None,
                                       "Only filename-safe .xlsx files are accepted"),), sha)

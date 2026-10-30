@@ -39,7 +39,7 @@ def validate_buckets(buckets: Sequence[TimeBucket]) -> None:
     if len({b.name for b in buckets}) != len(buckets):
         raise ValueError("duplicate bucket name")
     ordered = sorted(buckets, key=lambda bucket: bucket.start_day)
-    for previous, current in zip(ordered, ordered[1:]):
+    for previous, current in zip(ordered, ordered[1:], strict=False):
         if previous.end_day is None or current.start_day <= previous.end_day:
             raise ValueError("overlapping bucket ranges")
 

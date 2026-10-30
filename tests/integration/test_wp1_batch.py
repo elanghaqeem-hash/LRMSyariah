@@ -30,7 +30,8 @@ def test_full_13_source_batch_has_no_failures_but_mapping_warning() -> None:
 
 
 def test_missing_mandatory_dataset_fails() -> None:
-    files = sample_files(); del files["Deposito.xlsx"]
+    files = sample_files()
+    del files["Deposito.xlsx"]
     result = valid_batch(files)
     assert result.report.status == "FAILED"
     assert any(f.dataset_type == "Deposito" for f in result.report.findings)
@@ -53,35 +54,40 @@ def test_reporting_currency_mismatch_fails_no_automatic_fx() -> None:
 
 def test_duplicate_business_key_fails() -> None:
     files = sample_files()
-    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN]); rows.append(deepcopy(rows[0]))
+    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN])
+    rows.append(deepcopy(rows[0]))
     files["GiroTabungan.xlsx"] = workbook_bytes(DatasetType.GIRO_TABUNGAN, rows)
     assert any(f.rule_id == "DQ-DUP-001" for f in valid_batch(files).report.findings)
 
 
 def test_missing_gl_anchor_reference_fails() -> None:
     files = sample_files()
-    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN]); rows[0]["gl_code"] = "GL-UNKNOWN"
+    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN])
+    rows[0]["gl_code"] = "GL-UNKNOWN"
     files["GiroTabungan.xlsx"] = workbook_bytes(DatasetType.GIRO_TABUNGAN, rows)
     assert any(f.rule_id == "DQ-REF-001" for f in valid_batch(files).report.findings)
 
 
 def test_matured_placement_fails() -> None:
     files = sample_files()
-    rows = deepcopy(SAMPLES[DatasetType.PENEMPATAN_BANK_LAIN]); rows[0]["jatuh_tempo"] = date(2026,10,29)
+    rows = deepcopy(SAMPLES[DatasetType.PENEMPATAN_BANK_LAIN])
+    rows[0]["jatuh_tempo"] = date(2026,10,29)
     files["PenempatanBankLain.xlsx"] = workbook_bytes(DatasetType.PENEMPATAN_BANK_LAIN, rows)
     assert any(f.rule_id == "DQ-MATURITY-001" for f in valid_batch(files).report.findings)
 
 
 def test_future_regulatory_reference_fails() -> None:
     files = sample_files()
-    rows = deepcopy(SAMPLES[DatasetType.KEWAJIBAN_GWM_PLM]); rows[0]["tanggal_efektif"] = date(2026,11,1)
+    rows = deepcopy(SAMPLES[DatasetType.KEWAJIBAN_GWM_PLM])
+    rows[0]["tanggal_efektif"] = date(2026,11,1)
     files["KewajibanGWMPLM.xlsx"] = workbook_bytes(DatasetType.KEWAJIBAN_GWM_PLM, rows)
     assert any(f.rule_id == "DQ-MATURITY-001" for f in valid_batch(files).report.findings)
 
 
 def test_unapproved_akad_blocks() -> None:
     files = sample_files()
-    rows = deepcopy(SAMPLES[DatasetType.DEPOSITO]); rows[0]["akad"] = "other_pending_bank_approval"
+    rows = deepcopy(SAMPLES[DatasetType.DEPOSITO])
+    rows[0]["akad"] = "other_pending_bank_approval"
     files["Deposito.xlsx"] = workbook_bytes(DatasetType.DEPOSITO, rows)
     assert any(f.rule_id == "DQ-AKAD-001" for f in valid_batch(files).report.findings)
 
@@ -94,19 +100,22 @@ def test_unknown_required_scope_is_warning() -> None:
 
 
 def test_duplicate_dataset_type_fails() -> None:
-    files = sample_files(); files["NeracaHarian_duplicate.xlsx"] = files["NeracaHarian.xlsx"]
+    files = sample_files()
+    files["NeracaHarian_duplicate.xlsx"] = files["NeracaHarian.xlsx"]
     assert any(f.rule_id == "DQ-DUP-001" for f in valid_batch(files).report.findings)
 
 
 def test_source_row_currency_mismatch_fails() -> None:
     files = sample_files()
-    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN]); rows[0]["currency"] = "USD"
+    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN])
+    rows[0]["currency"] = "USD"
     files["GiroTabungan.xlsx"] = workbook_bytes(DatasetType.GIRO_TABUNGAN, rows)
     assert any(f.rule_id == "DQ-CURRENCY-001" for f in valid_batch(files).report.findings)
 
 
 def test_cross_dataset_product_akad_conflict_fails() -> None:
     files = sample_files()
-    rows = deepcopy(SAMPLES[DatasetType.DISTRIBUSI_BAGI_HASIL]); rows[0]["akad"] = "wadiah"
+    rows = deepcopy(SAMPLES[DatasetType.DISTRIBUSI_BAGI_HASIL])
+    rows[0]["akad"] = "wadiah"
     files["DistribusiBagiHasil.xlsx"] = workbook_bytes(DatasetType.DISTRIBUSI_BAGI_HASIL, rows)
     assert any(f.rule_id == "DQ-AKAD-003" for f in valid_batch(files).report.findings)

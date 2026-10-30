@@ -14,7 +14,6 @@ from scripts.generate_synthetic_inputs import SAMPLES, workbook_bytes
 
 
 def mutate(payload: bytes, fn: object) -> bytes:
-    from collections.abc import Callable
     wb = load_workbook(io.BytesIO(payload))
     assert callable(fn)
     fn(wb)
@@ -66,21 +65,24 @@ def test_duplicate_header_fails_closed() -> None:
 
 def test_row_with_binary_float_not_accepted() -> None:
     # The loader must not quietly admit .xlsx numeric float money as binary floats.
-    rows = deepcopy(SAMPLES[DatasetType.NERACA_HARIAN]); rows[0]["saldo"] = 0.1
+    rows = deepcopy(SAMPLES[DatasetType.NERACA_HARIAN])
+    rows[0]["saldo"] = 0.1
     result = load_xlsx("bad.xlsx", workbook_bytes(DatasetType.NERACA_HARIAN, rows))
     assert result.source is not None and result.findings
     assert result.findings[0].field == "saldo"
 
 
 def test_row_with_unmasked_id_fails_and_no_value_leaked() -> None:
-    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN]); rows[0]["account_id"] = "PERSONAL-IDENTIFIER-12345"
+    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN])
+    rows[0]["account_id"] = "PERSONAL-IDENTIFIER-12345"
     result = load_xlsx("bad.xlsx", workbook_bytes(DatasetType.GIRO_TABUNGAN, rows))
     assert result.findings and result.findings[0].field == "account_id"
     assert "PERSONAL-IDENTIFIER" not in str(result.findings)
 
 
 def test_invalid_akad_is_failed() -> None:
-    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN]); rows[0]["akad"] = "INVALID"
+    rows = deepcopy(SAMPLES[DatasetType.GIRO_TABUNGAN])
+    rows[0]["akad"] = "INVALID"
     result = load_xlsx("bad.xlsx", workbook_bytes(DatasetType.GIRO_TABUNGAN, rows))
     assert result.findings[0].rule_id == "DQ-AKAD-001"
 

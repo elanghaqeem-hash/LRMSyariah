@@ -99,12 +99,15 @@ def test_parameter_requires_independent_checker_evidence(session):
 def test_role_privileges_forbidden(session):
     for role in ("checker-B", "auditor", "admin", "alco", "disabled"):
         if role == "disabled":
-            with pytest.raises(PermissionError): GovernanceService(session, role)
+            with pytest.raises(PermissionError):
+                GovernanceService(session, role)
         else:
-            with pytest.raises(PermissionError): GovernanceService(session, role).draft_parameter(
+            with pytest.raises(PermissionError):
+                GovernanceService(session, role).draft_parameter(
                 param_id="x", value="1", unit="ratio", effective_from=D,
                 legal_basis=LEGAL, change_reason=REASON)
-    p = draft_param(session); maker(session).submit(p.id)
+    p = draft_param(session)
+    maker(session).submit(p.id)
     for role in ("auditor", "admin", "alco", "maker-C"):
         with pytest.raises(PermissionError):
             GovernanceService(session, role).approve(p.id,
@@ -167,7 +170,8 @@ def test_latest_as_of_versions_and_retirement_tombstone(session):
 
 
 def test_no_same_date_double_active(session):
-    p1 = draft_param(session); approve_param(session, p1)
+    p1 = draft_param(session)
+    approve_param(session, p1)
     p2 = draft_param(session, value="0.9")
     maker(session).submit(p2.id)
     with pytest.raises(GovernanceError, match="already starts"):
@@ -209,7 +213,8 @@ def test_service_integration_mapping_coverage_all_synthetic_rows(session):
     created: set[tuple[str,str]] = set()
     for ds in DatasetType:
         field = SOURCE_KEY_FIELDS.get(ds)
-        if field is None: continue
+        if field is None:
+            continue
         for row in SAMPLES[ds]:
             key = str(row[field])
             if (ds.value,key) in created: continue
@@ -267,11 +272,16 @@ def test_backdated_approved_revision_rejected(session):
 
 
 def test_parameter_snapshot_is_canonical_order_invariant(session):
-    a = draft_param(session, key="A", value="1.0"); approve_param(session, a)
-    b = draft_param(session, key="B", value="2.000"); approve_param(session, b)
+    a = draft_param(session, key="A", value="1.0")
+    approve_param(session, a)
+    b = draft_param(session, key="B", value="2.000")
+    approve_param(session, b)
     one, h1 = checker(session).parameter_snapshot(["B", "A"], D)
     two, h2 = checker(session).parameter_snapshot(["A", "B"], D)
     assert h1 == h2 and one == two
-    with pytest.raises(GovernanceError): checker(session).parameter_snapshot([], D)
-    with pytest.raises(GovernanceError): checker(session).parameter_snapshot(["A", "A"], D)
-    with pytest.raises(GovernanceError): checker(session).parameter_snapshot(["A", "MISSING"], D)
+    with pytest.raises(GovernanceError):
+        checker(session).parameter_snapshot([], D)
+    with pytest.raises(GovernanceError):
+        checker(session).parameter_snapshot(["A", "A"], D)
+    with pytest.raises(GovernanceError):
+        checker(session).parameter_snapshot(["A", "MISSING"], D)
