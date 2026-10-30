@@ -217,7 +217,8 @@ def test_service_integration_mapping_coverage_all_synthetic_rows(session):
             continue
         for row in SAMPLES[ds]:
             key = str(row[field])
-            if (ds.value,key) in created: continue
+            if (ds.value,key) in created:
+                continue
             rec = draft_mapping(session, dataset=ds.value, source_key=key, akad=row['akad'])
             approve_mapping(session, rec)
             created.add((ds.value,key))
