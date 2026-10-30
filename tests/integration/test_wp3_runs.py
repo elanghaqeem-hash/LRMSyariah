@@ -102,7 +102,7 @@ def test_immutable_approved_raw_sql(db):
 
 
 def test_audit_append_only_raw_sql(db):
-    run = approved(db)
+    approved(db)
     with pytest.raises(DatabaseError):
         db.execute(text('DELETE FROM lrm_audit_event WHERE sequence = 1'))
     db.rollback()
