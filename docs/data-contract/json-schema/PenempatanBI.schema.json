@@ -1,0 +1,87 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "$defs": {
+    "Akad": {
+      "enum": [
+        "wadiah",
+        "mudharabah",
+        "musyarakah",
+        "murabahah",
+        "ijarah",
+        "imbt",
+        "qardh",
+        "istishna",
+        "kafalah",
+        "wakalah",
+        "other_pending_bank_approval"
+      ],
+      "title": "Akad",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "akad": {
+      "$ref": "#/$defs/Akad"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "gl_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Gl Code",
+      "type": "string"
+    },
+    "jatuh_tempo": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Jatuh Tempo"
+    },
+    "jenis": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Jenis",
+      "type": "string"
+    },
+    "placement_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Placement Id",
+      "type": "string"
+    },
+    "saldo": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "title": "Saldo"
+    }
+  },
+  "required": [
+    "currency",
+    "placement_id",
+    "jenis",
+    "gl_code",
+    "akad",
+    "saldo"
+  ],
+  "title": "PenempatanBI",
+  "type": "object"
+}

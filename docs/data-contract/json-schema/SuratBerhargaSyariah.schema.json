@@ -1,0 +1,122 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "$defs": {
+    "Akad": {
+      "enum": [
+        "wadiah",
+        "mudharabah",
+        "musyarakah",
+        "murabahah",
+        "ijarah",
+        "imbt",
+        "qardh",
+        "istishna",
+        "kafalah",
+        "wakalah",
+        "other_pending_bank_approval"
+      ],
+      "title": "Akad",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "agency": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agency"
+    },
+    "akad": {
+      "$ref": "#/$defs/Akad"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "encumbered_flag": {
+      "title": "Encumbered Flag",
+      "type": "boolean"
+    },
+    "gl_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Gl Code",
+      "type": "string"
+    },
+    "instrument_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "isin": {
+      "pattern": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$",
+      "title": "Isin",
+      "type": "string"
+    },
+    "issuer_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Issuer Code",
+      "type": "string"
+    },
+    "jatuh_tempo": {
+      "format": "date",
+      "title": "Jatuh Tempo",
+      "type": "string"
+    },
+    "jenis": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Jenis",
+      "type": "string"
+    },
+    "nilai_pasar": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "title": "Nilai Pasar"
+    },
+    "rating": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rating"
+    }
+  },
+  "required": [
+    "currency",
+    "instrument_id",
+    "gl_code",
+    "isin",
+    "jenis",
+    "issuer_code",
+    "akad",
+    "jatuh_tempo",
+    "nilai_pasar",
+    "encumbered_flag"
+  ],
+  "title": "SuratBerhargaSyariah",
+  "type": "object"
+}

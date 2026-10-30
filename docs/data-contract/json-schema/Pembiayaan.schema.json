@@ -1,0 +1,128 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "$defs": {
+    "Akad": {
+      "enum": [
+        "wadiah",
+        "mudharabah",
+        "musyarakah",
+        "murabahah",
+        "ijarah",
+        "imbt",
+        "qardh",
+        "istishna",
+        "kafalah",
+        "wakalah",
+        "other_pending_bank_approval"
+      ],
+      "title": "Akad",
+      "type": "string"
+    },
+    "Instalment": {
+      "additionalProperties": false,
+      "properties": {
+        "nilai": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "gt": "0",
+          "title": "Nilai"
+        },
+        "tanggal": {
+          "format": "date",
+          "title": "Tanggal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tanggal",
+        "nilai"
+      ],
+      "title": "Instalment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "akad": {
+      "$ref": "#/$defs/Akad"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "encumbered_flag": {
+      "title": "Encumbered Flag",
+      "type": "boolean"
+    },
+    "facility_id": {
+      "pattern": "^(?:MASK|TOKEN)-[A-Za-z0-9_-]{6,64}$",
+      "title": "Facility Id",
+      "type": "string"
+    },
+    "gl_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Gl Code",
+      "type": "string"
+    },
+    "jadwal_angsuran": {
+      "items": {
+        "$ref": "#/$defs/Instalment"
+      },
+      "title": "Jadwal Angsuran",
+      "type": "array"
+    },
+    "jatuh_tempo": {
+      "format": "date",
+      "title": "Jatuh Tempo",
+      "type": "string"
+    },
+    "kolektibilitas": {
+      "maximum": 5,
+      "minimum": 1,
+      "title": "Kolektibilitas",
+      "type": "integer"
+    },
+    "outstanding": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "title": "Outstanding"
+    },
+    "product_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Product Code",
+      "type": "string"
+    }
+  },
+  "required": [
+    "currency",
+    "facility_id",
+    "gl_code",
+    "product_code",
+    "akad",
+    "kolektibilitas",
+    "jatuh_tempo",
+    "jadwal_angsuran",
+    "outstanding",
+    "encumbered_flag"
+  ],
+  "title": "Pembiayaan",
+  "type": "object"
+}

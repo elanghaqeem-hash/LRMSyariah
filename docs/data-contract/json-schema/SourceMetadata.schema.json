@@ -1,0 +1,72 @@
+{
+  "$defs": {
+    "DatasetType": {
+      "enum": [
+        "NeracaHarian",
+        "PenempatanBI",
+        "SuratBerhargaSyariah",
+        "PenempatanBankLain",
+        "GiroTabungan",
+        "Deposito",
+        "KewajibanAntarBank",
+        "Pembiayaan",
+        "Kontinjensi",
+        "DistribusiBagiHasil",
+        "BenchmarkImbalHasil",
+        "Permodalan",
+        "KewajibanGWMPLM"
+      ],
+      "title": "DatasetType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "dataset_type": {
+      "$ref": "#/$defs/DatasetType"
+    },
+    "extracted_at": {
+      "format": "date-time",
+      "title": "Extracted At",
+      "type": "string"
+    },
+    "reporting_currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Reporting Currency",
+      "type": "string"
+    },
+    "reporting_date": {
+      "format": "date",
+      "title": "Reporting Date",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_reference": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Source Reference",
+      "type": "string"
+    },
+    "source_system": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Source System",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "dataset_type",
+    "reporting_date",
+    "reporting_currency",
+    "source_system",
+    "extracted_at",
+    "source_reference"
+  ],
+  "title": "SourceMetadata",
+  "type": "object"
+}

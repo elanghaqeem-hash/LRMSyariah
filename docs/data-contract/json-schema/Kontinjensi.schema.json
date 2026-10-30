@@ -1,0 +1,88 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "$defs": {
+    "Akad": {
+      "enum": [
+        "wadiah",
+        "mudharabah",
+        "musyarakah",
+        "murabahah",
+        "ijarah",
+        "imbt",
+        "qardh",
+        "istishna",
+        "kafalah",
+        "wakalah",
+        "other_pending_bank_approval"
+      ],
+      "title": "Akad",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "akad": {
+      "$ref": "#/$defs/Akad"
+    },
+    "commitment_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Commitment Id",
+      "type": "string"
+    },
+    "counterparty_type": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Counterparty Type",
+      "type": "string"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "gl_code": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Gl Code"
+    },
+    "jenis": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Jenis",
+      "type": "string"
+    },
+    "nilai": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "title": "Nilai"
+    }
+  },
+  "required": [
+    "currency",
+    "commitment_id",
+    "jenis",
+    "counterparty_type",
+    "akad",
+    "nilai"
+  ],
+  "title": "Kontinjensi",
+  "type": "object"
+}

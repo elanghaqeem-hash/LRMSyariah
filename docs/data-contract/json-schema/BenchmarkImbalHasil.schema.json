@@ -1,0 +1,49 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "additionalProperties": false,
+  "properties": {
+    "benchmark_type": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Benchmark Type",
+      "type": "string"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "rate": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Rate"
+    },
+    "sumber": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Sumber",
+      "type": "string"
+    },
+    "tanggal_efektif": {
+      "format": "date",
+      "title": "Tanggal Efektif",
+      "type": "string"
+    }
+  },
+  "required": [
+    "currency",
+    "benchmark_type",
+    "rate",
+    "sumber",
+    "tanggal_efektif"
+  ],
+  "title": "BenchmarkImbalHasil",
+  "type": "object"
+}
