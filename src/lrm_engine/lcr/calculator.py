@@ -108,11 +108,11 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
     with localcontext(ENGINE_CONTEXT):
         levels: dict[str, Decimal] = {level: Decimal(0) for level in HQLA_LEVELS}
         trace: list[tuple[str, str, Decimal]] = []
-        for item in hqla:
-            haircut = _factor(factors, item.factor_key)
-            effective = item.amount * (Decimal(1) - haircut)
-            levels[item.level] += effective
-            trace.append((item.rule_id, item.source_sha256, effective))
+        for asset in hqla:
+            haircut = _factor(factors, asset.factor_key)
+            effective = asset.amount * (Decimal(1) - haircut)
+            levels[asset.level] += effective
+            trace.append((asset.rule_id, asset.source_sha256, effective))
         one, a, b = (levels[n] for n in HQLA_LEVELS)
         cap_two = _factor(factors, "hqlacap.level2")
         cap_b = _factor(factors, "hqlacap.level2b")
@@ -127,15 +127,15 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
                      (one + a_used) * cap_b / (Decimal(1) - cap_b))
         final_hqla = one + a_used + b_used
         out = Decimal(0)
-        for item in outflows:
-            weighted = item.amount * _factor(factors, item.factor_key)
+        for outflow_leg in outflows:
+            weighted = outflow_leg.amount * _factor(factors, outflow_leg.factor_key)
             out += weighted
-            trace.append((item.rule_id, item.source_sha256, weighted))
+            trace.append((outflow_leg.rule_id, outflow_leg.source_sha256, weighted))
         incoming = Decimal(0)
-        for item in inflows:
-            weighted = item.amount * _factor(factors, item.factor_key)
+        for inflow_leg in inflows:
+            weighted = inflow_leg.amount * _factor(factors, inflow_leg.factor_key)
             incoming += weighted
-            trace.append((item.rule_id, item.source_sha256, weighted))
+            trace.append((inflow_leg.rule_id, inflow_leg.source_sha256, weighted))
         inflow_cap = _factor(factors, "inflow.cap")
         inflow_used = min(incoming, inflow_cap * out)
         nco = out - inflow_used
