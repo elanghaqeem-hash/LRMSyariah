@@ -35,3 +35,12 @@ Tidak ada implementasi aplikasi atau integrasi sinkronisasi percakapan yang dikl
 - Tidak memasukkan proposal Bank PDF, data nasabah nyata, maupun audit laporan yang mungkin mengandung rincian kontraktual ke repository public.
 - WP2 belum diverifikasi terhadap PostgreSQL aktual; parameter regulatori dan mapping akad tidak boleh dipakai sebelum approval Bank.
 - `main` belum menunjukkan kesiapan produksi; perpindahan dari WP2 ke WP3 memerlukan audit integritas dan konfirmasi release gate.
+
+
+## ADR-0003 — WP3 immutable CalculationRun, audit ledger (2026-10-31)
+**Status:** Engineering implemented; production HOLD.
+- Freeze source/parameter snapshots at creation and APPROVED results permanently.
+- Corrections create a new run pointing to the approved predecessor.
+- AuditEvent append-only, canonical SHA-256 chain; restricted PostgreSQL role and externally anchored hash required before production.
+- Only approved runs may be reproduced on exact semver+git SHA engine.
+- Synthetic SQLite test doubles are not evidence of production PostgreSQL security.
