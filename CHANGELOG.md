@@ -25,3 +25,9 @@ Seluruh perubahan teknis substantif yang telah di-commit ke repository harus dic
 - Added append-only hash-chain AuditEvent ledger and PostgreSQL migration 0002.
 - Synthetic local tests: 126 passed (113 prior + 13 WP3). PostgreSQL end-to-end/Bank UAT pending.
 - Release gate remains HOLD: WP5 reconciliation evidence, WP6 OIDC, Bank model validation and live infrastructure.
+
+### Analytical prototypes — 2026-10-31 (nonregulatory)
+- Added candidate pure LCR, ASF/RSF NSFR, 19-bucket survival, shock stress, DCR, ILAAP concentration calculations with all factors external and evidence tagged.
+- Added GL three-layer reconciliation and deterministic sanitized audit ZIP prototype.
+- Engineering tests local: 160 passed, 91.68% measured coverage. No OJK filing certification, Bank source mapping or OIDC / PostgreSQL UAT.
+- Complete WP4–WP13 remains gated; details in docs/engineering/WP4-WP11-ENGINEERING-STATUS-20261031.md.
