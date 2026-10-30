@@ -1,0 +1,79 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "additionalProperties": false,
+  "properties": {
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "legal_basis": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Legal Basis",
+      "type": "string"
+    },
+    "rasio_gwm": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "le": "1",
+      "title": "Rasio Gwm"
+    },
+    "rasio_plm": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "le": "1",
+      "title": "Rasio Plm"
+    },
+    "reference_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Reference Id",
+      "type": "string"
+    },
+    "sumber": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Sumber",
+      "type": "string"
+    },
+    "tanggal_efektif": {
+      "format": "date",
+      "title": "Tanggal Efektif",
+      "type": "string"
+    },
+    "verification_status": {
+      "const": "DRAFT_UNVERIFIED",
+      "title": "Verification Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "currency",
+    "reference_id",
+    "rasio_gwm",
+    "rasio_plm",
+    "tanggal_efektif",
+    "sumber",
+    "legal_basis",
+    "verification_status"
+  ],
+  "title": "KewajibanGWMPLM",
+  "type": "object"
+}

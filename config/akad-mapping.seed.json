@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0.0",
+  "status": "DRAFT_UNVERIFIED",
+  "items": [],
+  "note": "No Bank product codes, akad-to-regulatory classes, or DPS reviews supplied. Do not seed active regulatory mappings."
+}

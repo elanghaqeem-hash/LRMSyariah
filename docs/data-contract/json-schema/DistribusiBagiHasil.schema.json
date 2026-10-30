@@ -1,0 +1,101 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "$defs": {
+    "Akad": {
+      "enum": [
+        "wadiah",
+        "mudharabah",
+        "musyarakah",
+        "murabahah",
+        "ijarah",
+        "imbt",
+        "qardh",
+        "istishna",
+        "kafalah",
+        "wakalah",
+        "other_pending_bank_approval"
+      ],
+      "title": "Akad",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "akad": {
+      "$ref": "#/$defs/Akad"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "distributable_revenue": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "title": "Distributable Revenue"
+    },
+    "distribution_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Distribution Id",
+      "type": "string"
+    },
+    "equivalent_rate": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Equivalent Rate"
+    },
+    "nisbah_nasabah": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "le": "1",
+      "title": "Nisbah Nasabah"
+    },
+    "product_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Product Code",
+      "type": "string"
+    },
+    "tenor_months": {
+      "minimum": 0,
+      "title": "Tenor Months",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "currency",
+    "distribution_id",
+    "product_code",
+    "akad",
+    "tenor_months",
+    "nisbah_nasabah",
+    "distributable_revenue",
+    "equivalent_rate"
+  ],
+  "title": "DistribusiBagiHasil",
+  "type": "object"
+}

@@ -1,0 +1,105 @@
+{
+  "$comment": "Provisional LRM Bank Syariah Phase-1 data contract. Bank source mapping / regulatory rules not yet approved.",
+  "$defs": {
+    "Akad": {
+      "enum": [
+        "wadiah",
+        "mudharabah",
+        "musyarakah",
+        "murabahah",
+        "ijarah",
+        "imbt",
+        "qardh",
+        "istishna",
+        "kafalah",
+        "wakalah",
+        "other_pending_bank_approval"
+      ],
+      "title": "Akad",
+      "type": "string"
+    },
+    "Segment": {
+      "enum": [
+        "perorangan",
+        "umk",
+        "korporasi",
+        "pemerintah",
+        "lembaga_keuangan",
+        "other_pending_bank_approval"
+      ],
+      "title": "Segment",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "account_id": {
+      "pattern": "^(?:MASK|TOKEN)-[A-Za-z0-9_-]{6,64}$",
+      "title": "Account Id",
+      "type": "string"
+    },
+    "akad": {
+      "$ref": "#/$defs/Akad"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "gl_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Gl Code",
+      "type": "string"
+    },
+    "lps_eligible": {
+      "title": "Lps Eligible",
+      "type": "boolean"
+    },
+    "operational_flag": {
+      "title": "Operational Flag",
+      "type": "boolean"
+    },
+    "product_code": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Product Code",
+      "type": "string"
+    },
+    "relationship_months": {
+      "minimum": 0,
+      "title": "Relationship Months",
+      "type": "integer"
+    },
+    "saldo": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "ge": "0",
+      "title": "Saldo"
+    },
+    "segmen": {
+      "$ref": "#/$defs/Segment"
+    }
+  },
+  "required": [
+    "currency",
+    "account_id",
+    "gl_code",
+    "product_code",
+    "akad",
+    "segmen",
+    "lps_eligible",
+    "operational_flag",
+    "relationship_months",
+    "saldo"
+  ],
+  "title": "GiroTabungan",
+  "type": "object"
+}

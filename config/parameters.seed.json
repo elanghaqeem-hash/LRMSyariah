@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "regulatory_parameters": [
+    {"param_id": "LCR_HQLA_LEVEL_2_CAP", "legal_basis": "POJK 20/2025; exact appendix clause [VERIFY]", "value": null, "unit": "ratio", "effective_from": null, "status": "DRAFT_UNVERIFIED"},
+    {"param_id": "LCR_CASH_INFLOW_CAP", "legal_basis": "POJK 20/2025; exact appendix clause [VERIFY]", "value": null, "unit": "ratio", "effective_from": null, "status": "DRAFT_UNVERIFIED"},
+    {"param_id": "NSFR_ASF_FACTOR_BY_AKAD", "legal_basis": "POJK 20/2025; exact appendix clause [VERIFY]", "value": null, "unit": "ratio", "effective_from": null, "status": "DRAFT_UNVERIFIED"},
+    {"param_id": "NSFR_RSF_FACTOR_BY_AKAD", "legal_basis": "POJK 20/2025; exact appendix clause [VERIFY]", "value": null, "unit": "ratio", "effective_from": null, "status": "DRAFT_UNVERIFIED"},
+    {"param_id": "GWM_PLM_SYARIAH", "legal_basis": "Current PBI/PADG [VERIFY]", "value": null, "unit": "ratio", "effective_from": null, "status": "DRAFT_UNVERIFIED"}
+  ]
+}

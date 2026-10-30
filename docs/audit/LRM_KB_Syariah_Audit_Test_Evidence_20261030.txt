@@ -1,0 +1,52 @@
+LRM KB SYARIAH – INDEPENDENT LOCAL CODE AUDIT EVIDENCE
+Audit execution UTC: 2026-10-30 07:19:01
+Source: LRM_KB_Syariah_WP0_WP2_20261030.zip
+Python version:
+Python 3.13.5
+Tests with PYTHONPATH=src:.
+........................................................................ [ 63%]
+.........................................                                [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.5-final-0 ________________
+
+Name                                    Stmts   Miss Branch BrPart  Cover   Missing
+-----------------------------------------------------------------------------------
+src/lrm_data/__init__.py                    3      0      0      0   100%
+src/lrm_data/dq.py                         45      1      4      0    98%   86
+src/lrm_data/loader.py                    142     19     68     18    82%   64, 69, 74, 79, 81, 90, 96, 102, 107, 109, 117, 121, 127, 130, 134, 151, 154, 166-168
+src/lrm_data/schema.py                    217      6     10      4    96%   108, 146, 218, 221-222, 224
+src/lrm_data/validation.py                 79      2     44      2    97%   39, 99
+src/lrm_engine/__init__.py                  1      0      0      0   100%
+src/lrm_engine/akad/__init__.py             0      0      0      0   100%
+src/lrm_engine/akad/classifier.py          22      0      2      0   100%
+src/lrm_engine/common/__init__.py           0      0      0      0   100%
+src/lrm_engine/common/canonical.py         37      0     22      0   100%
+src/lrm_engine/common/decimal_math.py      43      0     18      0   100%
+src/lrm_engine/common/time_buckets.py      40      0     24      0   100%
+src/lrm_engine/common/version.py           18      0      4      0   100%
+src/lrm_engine/dcr/__init__.py              0      0      0      0   100%
+src/lrm_engine/lcr/__init__.py              0      0      0      0   100%
+src/lrm_engine/nsfr/__init__.py             0      0      0      0   100%
+src/lrm_engine/stress/__init__.py           0      0      0      0   100%
+src/lrm_engine/survival/__init__.py         0      0      0      0   100%
+src/lrm_engine/trace/__init__.py            0      0      0      0   100%
+src/lrm_services/__init__.py                0      0      0      0   100%
+src/lrm_services/akad_gateway.py           55      3     10      0    95%   92-96
+src/lrm_services/governance.py            168     17     70     17    86%   40, 61, 68, 83, 85, 88, 107, 124, 126, 143, 145, 154, 161, 176, 193, 231, 249
+src/lrm_services/models.py                 49      1      2      1    96%   108
+-----------------------------------------------------------------------------------
+TOTAL                                     919     49    278     42    92%
+Required test coverage of 90.0% reached. Total coverage: 92.40%
+113 passed in 4.48s
+\nStatic inventory:
+__init__.py
+__init__.py
+__init__.py
+__init__.py
+__init__.py
+__init__.py
+__init__.py
+__init__.py
+Tool availability:
+/opt/pyvenv/bin/python: No module named ruff
+/opt/pyvenv/bin/python: No module named mypy

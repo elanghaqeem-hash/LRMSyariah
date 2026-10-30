@@ -23,3 +23,15 @@ Pengembangan LRM Syariah dilakukan secara bertahap, termasuk bantuan melalui Cha
 ### Dampak
 
 Tidak ada implementasi aplikasi atau integrasi sinkronisasi percakapan yang diklaim telah dibuat oleh keputusan ini. Implementasi CI/CD dan pengaturan privasi dapat dilakukan pada tahap berikutnya.
+
+
+## ADR-0002 — Import baseline WP0–WP2 via PR terisolasi
+
+**Tanggal:** 2026-10-31  
+**Status:** Accepted for engineering baseline; NOT approved for production
+
+- Mempertahankan seluruh scaffold repository, AGENTS.md, dan kebijakan GitHub-first.
+- Import source code, dokumentasi publik nonrahasia, pengujian dan data sintetis melalui branch `feat/import-wp0-wp2-audit-baseline-20261031` dan review PR.
+- Tidak memasukkan proposal Bank PDF, data nasabah nyata, maupun audit laporan yang mungkin mengandung rincian kontraktual ke repository public.
+- WP2 belum diverifikasi terhadap PostgreSQL aktual; parameter regulatori dan mapping akad tidak boleh dipakai sebelum approval Bank.
+- `main` belum menunjukkan kesiapan produksi; perpindahan dari WP2 ke WP3 memerlukan audit integritas dan konfirmasi release gate.
