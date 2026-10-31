@@ -86,3 +86,64 @@ def test_negative_tolerance_and_unapproved_tolerance_rejected():
         compare_working_paper(bank=p,engine=engine(),reporting_date=D,currency="IDR",
             monetary_tolerance=Decimal(0),ratio_tolerance=Decimal(0),
             tolerance_approval_ref="[VERIFY]")
+
+
+@pytest.mark.parametrize('field,value,reason',[
+    ('currency','idr','ISO 4217'),
+    ('paper_sha256','bad','digest'),
+    ('bank_approved_sha256','bad','digest'),
+    ('bank_approved_ref','','Bank approval'),
+    ('measures',{'hqla':'1'},'Missing or extra'),
+    ('rule_amounts',{},'Missing or extra'),
+])
+def test_reject_invalid_paper_contract(field,value,reason):
+    from dataclasses import replace
+    paper,_=fixture()
+    with pytest.raises(WorkingPaperError,match=reason):
+        replace(paper,**{field:value})
+
+
+def test_reject_unreconciled_engine_categories():
+    paper,_=fixture()
+    wrong=engine()
+    wrong['trace']=[('RULE-ASSET',H,'100'),('RULE-CASHFLOW',H,'30'),('RULE-UNKNOWN',H,'1')]
+    with pytest.raises(WorkingPaperError,match='Unmatched'):
+        diff(paper,wrong)
+
+
+def test_reject_bad_rule_trace_hash_and_approval_digest():
+    paper,_=fixture()
+    wrong=engine()
+    wrong['trace']=[('RULE-ASSET','invalid','100')]
+    with pytest.raises(WorkingPaperError,match='Invalid engine'):
+        diff(paper,wrong)
+
+
+def test_reject_invalid_json_and_excessively_large_paper():
+    bad=b'not a json document'
+    with pytest.raises(WorkingPaperError,match='Invalid, noncanonical'):
+        parse_working_paper_bytes(bad,expected_sha256=hashlib.sha256(bad).hexdigest(),
+            approved_ref='test',bank_approved_sha256=H,synthetic_only=True)
+    with pytest.raises(WorkingPaperError,match='size'):
+        parse_working_paper_bytes(b'x'*2_000_001,expected_sha256=H,
+            approved_ref='test',bank_approved_sha256=H,synthetic_only=True)
+
+
+def test_reject_missing_exact_paper_fields_and_negative_metric():
+    from dataclasses import replace
+    paper,_=fixture()
+    with pytest.raises(WorkingPaperError,match='nonnegative'):
+        replace(paper,measures={**paper.measures,'hqla':Decimal('-1')})
+    with pytest.raises(ValueError,match='NaN'):
+        replace(paper,rule_amounts={'RULE-X':Decimal('NaN')})
+
+
+def test_reject_no_trace_or_missing_metric_and_undocumented_ratio_delta():
+    paper,_=fixture()
+    wrong=engine()
+    del wrong['lcr']
+    with pytest.raises(WorkingPaperError,match='mandatory trace'):
+        diff(paper,wrong)
+    wrong=engine()
+    wrong['lcr']=Decimal('2.5')
+    assert diff(paper,wrong).status=='FAILED'

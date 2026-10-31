@@ -115,3 +115,77 @@ def test_currency_and_missing_source_ref_blocked():
         ledger(replace(trade(),currency="USD"))
     with pytest.raises(SFTLedgerError,match="requires a SHA"):
         replace(trade().legs[0],source_sha256="unknown")
+
+
+@pytest.mark.parametrize('field,value,reason',[
+    ('leg_id','not-token','pseudonymized'),
+    ('asset_id','BANK-REAL-ID','pseudonymized'),
+    ('level','UNKNOWN','approved HQLA'),
+    ('movement','MOVE','direction'),
+    ('counted_in_current_stock',1,'boolean'),
+    ('post_haircut_value',Decimal('0'),'positive'),
+    ('security_eligibility_ref','TBD','independently'),
+    ('independent_price_ref','[VERIFY]','independently'),
+    ('custody_encumbrance_ref','','independently'),
+    ('source_sha256','bad','SHA-256'),
+])
+def test_reject_invalid_collateral_leg(field,value,reason):
+    with pytest.raises(SFTLedgerError,match=reason):
+        replace(trade().legs[0],**{field:value})
+
+
+@pytest.mark.parametrize('field,value,reason',[
+    ('trade_id','RAW-REAL','pseudonymized'),
+    ('trade_kind','UNSUPPORTED','Unrecognized'),
+    ('akad','[VERIFY]','independently'),
+    ('state','UNSETTLED','settled'),
+    ('currency','idR','ISO currency'),
+    ('signed_contract_sha256','bad','SHA-256'),
+    ('settlement_sha256','bad','SHA-256'),
+    ('legal_sharia_ref','TBD','independently'),
+    ('legs',(), 'both legs'),
+])
+def test_reject_unapproved_trade(field,value,reason):
+    with pytest.raises(SFTLedgerError,match=reason):
+        replace(trade(),**{field:value})
+
+
+def test_reject_duplicate_leg_id_and_asset_in_same_trade():
+    t=trade()
+    with pytest.raises(SFTLedgerError,match='Duplicated SFT leg'):
+        replace(t,legs=(t.legs[0],replace(t.legs[1],leg_id=t.legs[0].leg_id)))
+    with pytest.raises(SFTLedgerError,match='asset parcel'):
+        replace(t,legs=(t.legs[0],replace(t.legs[1],asset_id=t.legs[0].asset_id)))
+
+
+@pytest.mark.parametrize('field,value,reason',[
+    ('reporting_currency','idR','Invalid SFT'),
+    ('source_batch_sha256','bad','SHA-256'),
+    ('hqla_stock_sha256','bad','SHA-256'),
+    ('bank_sft_policy_sha256','bad','SHA-256'),
+    ('bank_sft_policy_ref','TBD','independently'),
+    ('trades',(), 'Nonempty'),
+])
+def test_reject_invalid_batch_policy(field,value,reason):
+    with pytest.raises(SFTLedgerError,match=reason):
+        replace(ledger(trade()),**{field:value})
+
+
+def test_reject_duplicate_trade_and_missing_stock_or_reporting_period():
+    with pytest.raises(SFTLedgerError,match='Duplicate trade'):
+        ledger(trade(),trade())
+    with pytest.raises(SFTLedgerError,match='Complete reporting-date'):
+        stock_fingerprint({'L1':Decimal(1)})
+    with pytest.raises(SFTLedgerError,match='cut-off'):
+        adjust_hqla_for_sft(current=STOCK,ledger=ledger(trade()),
+            reporting_date=ASOF+timedelta(days=1),currency='IDR')
+    with pytest.raises(SFTLedgerError,match='currency'):
+        adjust_hqla_for_sft(current=STOCK,ledger=ledger(trade()),
+            reporting_date=ASOF,currency='USD')
+
+
+def test_reject_malformed_replay_snapshot_and_nonfinite_amount():
+    with pytest.raises(SFTLedgerError,match='Invalid or incomplete'):
+        ledger_from_snapshot({'reporting_date':'2026-10-31','trades':[{'unknown':'field'}]})
+    with pytest.raises(ValueError,match='NaN'):
+        replace(trade().legs[0],post_haircut_value=Decimal('NaN'))
