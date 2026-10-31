@@ -14,6 +14,7 @@ from lrm_data.schema import DatasetType
 from lrm_services.akad_gateway import SOURCE_KEY_FIELDS
 from lrm_services.governance import GovernanceService
 from lrm_services.lcr_evidence import LCRReconCase, LCRRunEvidence, review_reconciliation_case
+from lrm_services import sft_repository  # noqa: F401 — register SFT model before Base.metadata.create_all
 from lrm_services.lcr_pipeline import (
     LCRGateError, LCRSourcePolicy, _lcr_calculator, create_evidence_bound_lcr_run, prepare_lcr,
 )
