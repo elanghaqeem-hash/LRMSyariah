@@ -142,7 +142,8 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
         sft_digest: str | None = None
         sft_trace: tuple[tuple[str, str, Decimal], ...] = ()
         if has_unwind_transactions:
-            assert sft_ledger is not None and reporting_date is not None
+            if sft_ledger is None or reporting_date is None:
+                raise ValueError("Complete SFT unwind evidence is mandatory")
             unwind = adjust_hqla_for_sft(
                 current=levels, ledger=sft_ledger, reporting_date=reporting_date,
                 currency=reporting_currency)
