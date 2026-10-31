@@ -139,6 +139,11 @@ def verify_lcr_proof(session: Session, run: CalculationRun) -> str:
         raise RunError("One or more LCR reconciliation lines failed")
     if not p["recon"].get("lines"):
         raise RunError("No GL reconciliation lines found")
+    inp = json.loads(run.input_snapshot)
+    if inp.get("has_unwind_transactions") is True:
+        if (p.get("sft_ledger_sha256") != inp.get("sft_ledger_sha256")
+                or p.get("sft_source_sha256") != inp.get("sft_ledger", {}).get("source_batch_sha256")):
+            raise RunError("SFT source/ledger hashes missing from LCR evidence")
     if p.get("parameter_set_hash") != run.parameter_set_version or p.get("mapping_sha256") != run.akad_mapping_version:
         raise RunError("LCR parameter/mapping provenance mismatch")
     return proof.evidence_sha256

@@ -199,6 +199,8 @@ class RunService:
         if run.run_type in ("LCR_DAILY", "LCR_MONTHLY"):
             from lrm_services.lcr_evidence import verify_lcr_proof
             verify_lcr_proof(self.session, run)
+            from lrm_services.sft_repository import verify_sft_ledger_bound
+            verify_sft_ledger_bound(self.session, run)
         self._check_snapshots(run)
         # Calculation output contains only approved-modeled test data in current WP.
         result = calculator(json.loads(run.input_snapshot), json.loads(run.parameter_snapshot))
@@ -231,6 +233,8 @@ class RunService:
         if run.run_type in ("LCR_DAILY", "LCR_MONTHLY"):
             from lrm_services.lcr_evidence import verify_lcr_proof
             verify_lcr_proof(self.session, run)
+            from lrm_services.sft_repository import verify_sft_ledger_bound
+            verify_sft_ledger_bound(self.session, run)
         self._check_snapshots(run)
         if run.dq_summary != "PASS" or run.recon_summary != "PASS" or not run.result_sha256:
             raise RunError("Cannot approve without DQ, recon and result")

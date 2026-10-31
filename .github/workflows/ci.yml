@@ -76,3 +76,5 @@ jobs:
           alembic upgrade head
       - name: Real PostgreSQL synthetic maker-checker and raw-DML negative tests
         run: python scripts/postgresql_smoke_test.py
+      - name: Real PostgreSQL SFT immutable ledger smoke
+        run: python scripts/postgresql_sft_smoke_test.py

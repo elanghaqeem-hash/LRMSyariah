@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config, pool
 from lrm_services.models import Base
 from lrm_services import runs  # noqa: F401 - populate WP3 metadata
 from lrm_services import lcr_evidence  # noqa: F401 - populate WP4/WP5 evidence metadata
+from lrm_services import sft_repository  # noqa: F401 - populate SFT evidence metadata
 
 config = context.config
 if config.config_file_name is not None:

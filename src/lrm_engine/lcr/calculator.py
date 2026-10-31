@@ -6,11 +6,13 @@ This is an engineering implementation; NOT yet certified for OJK reporting.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, localcontext
 from typing import Mapping, Sequence
 import re
 
 from lrm_engine.lcr.ojk_annex_caps import official_cap_adjustments
+from lrm_engine.lcr.sft_ledger import SFTLedger, adjust_hqla_for_sft
 
 from lrm_engine.common.decimal_math import ENGINE_CONTEXT, as_decimal, ratio
 
@@ -85,6 +87,11 @@ class LCRResult:
     level2a: Decimal
     level2b: Decimal
     trace: tuple[tuple[str, str, Decimal], ...]
+    adjusted_level1: Decimal = Decimal(0)
+    adjusted_level2a: Decimal = Decimal(0)
+    adjusted_level2b: Decimal = Decimal(0)
+    sft_ledger_sha256: str | None = None
+    sft_trace: tuple[tuple[str, str, Decimal], ...] = ()
     methodology_status: str = "ENGINEERING_UNVERIFIED"
 
 
@@ -97,7 +104,10 @@ def _factor(factors: Mapping[str, Factor], key: str) -> Decimal:
 
 def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
                   inflows: Sequence[RegulatoryLeg], factors: Mapping[str, Factor],
-                  has_unwind_transactions: bool) -> LCRResult:
+                  has_unwind_transactions: bool,
+                  sft_ledger: SFTLedger | None = None,
+                  reporting_date: date | None = None,
+                  reporting_currency: str = "IDR") -> LCRResult:
     """Compute LCR, fail if composition must reflect unsettled short-term unwind.
 
     Annex I III.C applies 2B adjustment first, then total Level 2 adjustment.
@@ -105,8 +115,10 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
     `has_unwind_transactions` is therefore blocked, not assumed to be zero.
     All outputs retain full Decimal precision; no rounding in core.
     """
-    if has_unwind_transactions:
-        raise ValueError("HQLA adjusted-unwind model not implemented; regulatory run blocked")
+    if has_unwind_transactions and (sft_ledger is None or reporting_date is None):
+        raise ValueError("SFT unwind requires complete governed repo collateral ledger and date")
+    if not has_unwind_transactions and sft_ledger is not None:
+        raise ValueError("SFT ledger contradicts no-unwind declaration")
     with localcontext(ENGINE_CONTEXT):
         levels: dict[str, Decimal] = {level: Decimal(0) for level in HQLA_LEVELS}
         trace: list[tuple[str, str, Decimal]] = []
@@ -124,13 +136,21 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
         cap_b = _factor(factors, "hqlacap.level2b")
         if cap_two != Decimal("0.40") or cap_b != Decimal("0.15"):
             raise ValueError("Official POJK L2 and L2B limits require 40/15 percent")
-        # Annex I III.C.1–2 exact two-stage deduction, *after* asset haircuts.
-        # No-SFT case: adjusted holdings equal the current eligible holdings.
-        # SFT trades remain fail-closed until authenticated Bank collateral
-        # ledgers supply eligible adjusted stock and independent evidence.
+        # Annex I III.C: SFT settlement reversal changes *adjusted* levels,
+        # while the original stock remains the basis of the 15/60 deduction.
+        adj1, adj2a, adj2b = one, a, b
+        sft_digest: str | None = None
+        sft_trace: tuple[tuple[str, str, Decimal], ...] = ()
+        if has_unwind_transactions:
+            assert sft_ledger is not None and reporting_date is not None
+            unwind = adjust_hqla_for_sft(
+                current=levels, ledger=sft_ledger, reporting_date=reporting_date,
+                currency=reporting_currency)
+            adj1, adj2a, adj2b = unwind.level1, unwind.level2a, unwind.level2b
+            sft_digest, sft_trace = unwind.ledger_sha256, unwind.trace
         capped = official_cap_adjustments(
             level1=one, level2a=a, level2b=b,
-            adjusted_level1=one, adjusted_level2a=a, adjusted_level2b=b,
+            adjusted_level1=adj1, adjusted_level2a=adj2a, adjusted_level2b=adj2b,
         )
         final_hqla = capped.total_hqla
         a_used, b_used = capped.included_level2a, capped.included_level2b
@@ -150,4 +170,7 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
         return LCRResult(hqla=final_hqla, outflow=out, inflow_raw=incoming,
                          inflow_used=inflow_used, net_cash_outflow=nco,
                          lcr=ratio(final_hqla, nco), level1=one, level2a=a_used,
-                         level2b=b_used, trace=tuple(trace))
+                         level2b=b_used, trace=tuple(trace),
+                         adjusted_level1=adj1, adjusted_level2a=adj2a,
+                         adjusted_level2b=adj2b, sft_ledger_sha256=sft_digest,
+                         sft_trace=sft_trace)
