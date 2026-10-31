@@ -196,6 +196,9 @@ class RunService:
         run = self._get(run_id, "DRAFT")
         if run.maker_id != self.actor.subject or not dq_passed or not reconciliation_passed:
             raise RunError("Only original maker may validate after DQ and reconciliation PASS")
+        if run.run_type in ("LCR_DAILY", "LCR_MONTHLY"):
+            from lrm_services.lcr_evidence import verify_lcr_proof
+            verify_lcr_proof(self.session, run)
         self._check_snapshots(run)
         # Calculation output contains only approved-modeled test data in current WP.
         result = calculator(json.loads(run.input_snapshot), json.loads(run.parameter_snapshot))
@@ -225,6 +228,9 @@ class RunService:
         run = self._get(run_id, "SUBMITTED")
         if run.maker_id == self.actor.subject:
             raise PermissionError("Maker cannot approve own run")
+        if run.run_type in ("LCR_DAILY", "LCR_MONTHLY"):
+            from lrm_services.lcr_evidence import verify_lcr_proof
+            verify_lcr_proof(self.session, run)
         self._check_snapshots(run)
         if run.dq_summary != "PASS" or run.recon_summary != "PASS" or not run.result_sha256:
             raise RunError("Cannot approve without DQ, recon and result")

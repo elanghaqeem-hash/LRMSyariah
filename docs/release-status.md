@@ -1,27 +1,9 @@
-# Integration status (30 Oct 2026)
+# LRMSyariah — Release Gate
+**Updated 2026-10-31.** Source-of-truth: https://github.com/elanghaqeem-hash/LRMSyariah
 
-This repository assembles the pre-existing WP0, WP1, WP2 and technical audit deliverables into separate traceable Git commits with non-fast-forward local merges. **No GitHub PR has been merged**: the LRM repository has not been created or identified on the connected GitHub account. All commits here are LOCAL until a private target is provided and a push succeeds.
-
-- Engine: foundation only; no operational LCR/NSFR/ILAAP.
-- Regulation factors: DRAFT_UNVERIFIED; no active Bank-approved akad mapping.
-- Test evidence: 113/113 local pytest passing on Python 3.13.5.
-- Bank production release gate: HOLD.
-- Sensitive source proposal PDF and Bank record data are not committed.
-
-## Import into a new private repository
-
-Create a **private** repository for the LRM project, then from the extracted worktree:
-
-```sh
-git remote add origin git@github.com:YOUR-OWNER/YOUR-PRIVATE-LRM-REPO.git
-git push -u origin main
-git push origin feature/wp1-data-contract feature/wp2-governance docs/technical-audit-rtm
-```
-
-For offline history restore use the accompanying `.bundle` instead:
-
-```sh
-git clone LRM_KB_Syariah_Git_History_20261030.bundle lrm-kb-syariah
-```
-
-Run required CI, PostgreSQL integration and security reviews before release.
+- Baseline: WP0–WP3 on main, WP4–WP11 engineering prototypes merged. Issue #4 adds evidence-bound 13-file LCR integration and GL reconciliation through a feature PR.
+- Audit governance: source/case evidence immutability and checker review; prototype REGULATORY STATUS = ENGINEERING_UNVERIFIED.
+- CI verifies synthetic tests, Ruff/mypy, migration offline SQL, Bandit, dependency audit, and SBOM; not actual Bank PostgreSQL UAT or independent model validation.
+- **PRODUCTION / OFFICIAL REGULATORY REPORT: HOLD.**
+- Outstanding: POJK 20/2025 annex rule-by-rule, HQLA unwind, bank approved data/GL signatures, actual CBS/GL extracts, independently approved working papers and 1-quarter parallel run, OIDC, PostgreSQL true triggers & concurrency, regulator formats, model risk/DPS/IT/Finance signoff.
+- Prior local-only import notes are historical, not current repository status. See docs/engineering/ISSUE-4-LCR-INTEGRATION.md.

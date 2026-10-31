@@ -31,3 +31,9 @@ Seluruh perubahan teknis substantif yang telah di-commit ke repository harus dic
 - Added GL three-layer reconciliation and deterministic sanitized audit ZIP prototype.
 - Engineering tests local: 160 passed, 91.68% measured coverage. No OJK filing certification, Bank source mapping or OIDC / PostgreSQL UAT.
 - Complete WP4–WP13 remains gated; details in docs/engineering/WP4-WP11-ENGINEERING-STATUS-20261031.md.
+
+### Issue #4 — 2026-10-31: Evidence-bound LCR end-to-end engineering
+- Full 13-file governed WP1 DQ and WP2 effective date akad + factor snapshot to pure WP4 LCR; no regulatory coefficients hardcoded.
+- Bank-declared GL scope/sign and tolerance; source-to-GL/classifier gross reconciliation with persistent exception cases.
+- Immutable input/parameter/source/mapping/DQ/recon proof bound to WP3 LCR CalculationRun, PostgreSQL migration 0003 plus legacy boolean bypass prevention and synthetic tests.
+- Reporting/model/adjusted-unwind/SSO/production gate remain HOLD pending regulator annex detail and Bank sign-off.
