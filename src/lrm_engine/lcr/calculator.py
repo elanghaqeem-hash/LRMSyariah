@@ -10,6 +10,8 @@ from decimal import Decimal, localcontext
 from typing import Mapping, Sequence
 import re
 
+from lrm_engine.lcr.ojk_annex_caps import official_cap_adjustments
+
 from lrm_engine.common.decimal_math import ENGINE_CONTEXT, as_decimal, ratio
 
 HASH64 = re.compile(r"[0-9a-f]{64}\Z")
@@ -98,9 +100,9 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
                   has_unwind_transactions: bool) -> LCRResult:
     """Compute LCR, fail if composition must reflect unsettled short-term unwind.
 
-    HQLA 2A is allocated before 2B when both composition caps bind. This
-    allocation policy and exact adjusted-unwind treatment require independent
-    signoff against POJK 20/2025 Annex before live bank reporting.
+    Annex I III.C applies 2B adjustment first, then total Level 2 adjustment.
+    SFT unwind adjusted-stock extraction still requires bank trade evidence; any
+    `has_unwind_transactions` is therefore blocked, not assumed to be zero.
     All outputs retain full Decimal precision; no rounding in core.
     """
     if has_unwind_transactions:
@@ -110,22 +112,28 @@ def calculate_lcr(*, hqla: Sequence[HQLALeg], outflows: Sequence[RegulatoryLeg],
         trace: list[tuple[str, str, Decimal]] = []
         for asset in hqla:
             haircut = _factor(factors, asset.factor_key)
+            if asset.level == "L1" and haircut != Decimal(0):
+                raise ValueError("Official POJK Level 1 must have zero haircut")
+            if asset.level == "L2A" and haircut != Decimal("0.15"):
+                raise ValueError("Official POJK Level 2A requires 15 percent haircut")
             effective = asset.amount * (Decimal(1) - haircut)
             levels[asset.level] += effective
             trace.append((asset.rule_id, asset.source_sha256, effective))
         one, a, b = (levels[n] for n in HQLA_LEVELS)
         cap_two = _factor(factors, "hqlacap.level2")
         cap_b = _factor(factors, "hqlacap.level2b")
-        if cap_two >= 1 or cap_b >= 1:
-            raise ValueError("Level 2 and 2B caps must be strictly below 1")
-        if cap_b > cap_two:
-            raise ValueError("Level 2B cap cannot exceed aggregate Level 2 cap")
-        # Both cap limits are on POST-haircut HQLA (no unwind case).
-        allowed_level2 = one * cap_two / (Decimal(1) - cap_two)
-        a_used = min(a, allowed_level2)
-        b_used = min(b, allowed_level2 - a_used,
-                     (one + a_used) * cap_b / (Decimal(1) - cap_b))
-        final_hqla = one + a_used + b_used
+        if cap_two != Decimal("0.40") or cap_b != Decimal("0.15"):
+            raise ValueError("Official POJK L2 and L2B limits require 40/15 percent")
+        # Annex I III.C.1–2 exact two-stage deduction, *after* asset haircuts.
+        # No-SFT case: adjusted holdings equal the current eligible holdings.
+        # SFT trades remain fail-closed until authenticated Bank collateral
+        # ledgers supply eligible adjusted stock and independent evidence.
+        capped = official_cap_adjustments(
+            level1=one, level2a=a, level2b=b,
+            adjusted_level1=one, adjusted_level2a=a, adjusted_level2b=b,
+        )
+        final_hqla = capped.total_hqla
+        a_used, b_used = capped.included_level2a, capped.included_level2b
         out = Decimal(0)
         for outflow_leg in outflows:
             weighted = outflow_leg.amount * _factor(factors, outflow_leg.factor_key)
