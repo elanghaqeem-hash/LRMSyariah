@@ -33,7 +33,7 @@ def db():
 
 def draft(db):
     return RunService(db, 'maker').create(
-        reporting_date=date(2026, 10, 30), run_type='LCR_DAILY',
+        reporting_date=date(2026, 10, 30), run_type='STRESS',
         engine_version=VERSION, parameter_set_version='approved-param-v3',
         akad_mapping_version='reviewed-akad-v4',
         input_data={'saldo': Decimal('100.00')}, parameters={'delta': Decimal('25.00')})
@@ -125,7 +125,7 @@ def test_detect_tampered_memory_event(db):
 def test_supersession_preserves_history(db):
     previous = approved(db)
     second = RunService(db, 'maker').create(
-        reporting_date=date(2026, 10, 30), run_type='LCR_DAILY',
+        reporting_date=date(2026, 10, 30), run_type='STRESS',
         engine_version=VERSION, parameter_set_version='approved-param-v5',
         akad_mapping_version='reviewed-akad-v4', input_data={'saldo': '101'},
         parameters={'delta': '25'}, supersedes_run_id=previous.id,
@@ -139,7 +139,7 @@ def test_supersession_requires_approved_and_reason(db):
     old = draft(db)
     with pytest.raises(RunError):
         RunService(db, 'maker').create(
-            reporting_date=date(2026, 10, 30), run_type='LCR_DAILY',
+            reporting_date=date(2026, 10, 30), run_type='STRESS',
             engine_version=VERSION, parameter_set_version='x', akad_mapping_version='y',
             input_data={}, parameters={}, supersedes_run_id=old.id, change_reason='No')
 
@@ -147,11 +147,11 @@ def test_supersession_requires_approved_and_reason(db):
 def test_nofloat_no_weak_engine_version(db):
     maker = RunService(db, 'maker')
     with pytest.raises(TypeError):
-        maker.create(reporting_date=date(2026, 10, 30), run_type='LCR_DAILY',
+        maker.create(reporting_date=date(2026, 10, 30), run_type='STRESS',
                      engine_version=VERSION, parameter_set_version='v1', akad_mapping_version='v1',
                      input_data={'saldo': 12.5}, parameters={})
     with pytest.raises(RunError):
-        maker.create(reporting_date=date(2026, 10, 30), run_type='LCR_DAILY',
+        maker.create(reporting_date=date(2026, 10, 30), run_type='STRESS',
                      engine_version='dev', parameter_set_version='v1', akad_mapping_version='v1',
                      input_data={}, parameters={})
 
