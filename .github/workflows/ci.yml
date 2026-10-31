@@ -58,7 +58,7 @@ jobs:
           POSTGRES_DB: lrm_ci
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U lrm_ci -d lrm_ci'
+          --health-cmd=pg_isready
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
