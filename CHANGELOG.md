@@ -43,3 +43,9 @@ Seluruh perubahan teknis substantif yang telah di-commit ke repository harus dic
 - Replaced simplified HQLA cap allocation with exact Annex I III.C two-deduction calculation (no unwind path), 15/85, 15/60 and 2/3 ratios using Decimal.
 - Enforce official HQLA cap factors 40% and 15%, L1/L2A haircut arithmetic; SFT unwind continues to fail closed until approved transaction ledger.
 - Added isolated real PostgreSQL 16 CI smoke, synthetic negative tests, independent validation/parallel-run framework. Bank PostgreSQL/working papers/signoff NOT available.
+
+### SFT short-term unwind + LCR differential testing (31 Oct 2026)
+- Added Bank-evidence-gated SFT/repo/collateral exchange ledger with strict 30-day matured-settled tests, post-haircut adjustment, collateral double-count controls and hash/source-bound proof.
+- Added append-only SFT run ledger and Alembic migration 0004 with PG/SQLite guards, maker/checker immutable verification and actual ephemeral PG smoke.
+- Added differential comparison against separately approved, date/currency-matched LCR paper with all mandatory summary measures and rule category amounts; synthetic golden tests and Bank UAT secure CLI.
+- No actual Bank working papers, collateral custody/GL secured funding reconciliation, independent Bank signatures, daily quarter parallel run or production approval; regulatory release HOLD.

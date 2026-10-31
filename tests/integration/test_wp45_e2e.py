@@ -14,6 +14,7 @@ from lrm_data.schema import DatasetType
 from lrm_services.akad_gateway import SOURCE_KEY_FIELDS
 from lrm_services.governance import GovernanceService
 from lrm_services.lcr_evidence import LCRReconCase, LCRRunEvidence, review_reconciliation_case
+from lrm_services import sft_repository  # noqa: F401 — register SFT model before Base.metadata.create_all
 from lrm_services.lcr_pipeline import (
     LCRGateError, LCRSourcePolicy, _lcr_calculator, create_evidence_bound_lcr_run, prepare_lcr,
 )
@@ -213,3 +214,96 @@ def test_signed_gl_policy_and_no_float(db):
         LCRSourcePolicy(gl_signs={"GL-001": 1.0}, scope_approval_ref="SYN",
               scope_document_sha256=FAKE_SHA, has_unwind_transactions=False,
               unwind_review_ref="SYN", recon_policy=scope().recon_policy)
+
+def test_sft_unwind_13_sources_to_run_and_immutable_pg_equivalent(db):
+    """Synthetic 13-source + approved-WP2 + settled SFT -> WP3 immutable run."""
+    from dataclasses import replace
+    from datetime import timedelta
+    from lrm_engine.lcr.sft_ledger import SFTLedger, SFTTrade, UnwindLeg, stock_fingerprint
+    from lrm_services.sft_repository import SFTRunLedger, verify_sft_ledger_bound
+    from lrm_engine.common.canonical import sha256_canonical
+
+    governance = setup_governance(db)
+    baseline = prepare_lcr(files=fixture_files(), governance=governance,
+                           reporting_date=D, reporting_currency="IDR", source_policy=scope())
+    stock = {"L1": Decimal(0), "L2A": Decimal(0), "L2B": Decimal(0)}
+    for item in baseline.input_snapshot["legs"]:
+        if item["kind"] == "HQLA":
+            factor = Decimal(baseline.parameter_snapshot["factors"][item["factor_key"]]["value"])
+            stock[item["level"]] += Decimal(item["amount"]) * (Decimal(1) - factor)
+    assert stock["L1"] > Decimal("1")
+    ledger = SFTLedger(reporting_date=D,reporting_currency="IDR",
+        source_batch_sha256=FAKE_SHA,hqla_stock_sha256=stock_fingerprint(stock),
+        bank_sft_policy_ref=APPROVED_SYNTHETIC,bank_sft_policy_sha256=FAKE_SHA,
+        trades=(SFTTrade(trade_id="SFT-abcdefgh",trade_kind="REPO_SYARIAH",akad="wakalah",
+            trade_date=D-timedelta(days=6),settlement_date=D-timedelta(days=5),
+            maturity_date=D+timedelta(days=30),currency="IDR",state="SETTLED_OPEN",
+            signed_contract_sha256=FAKE_SHA,settlement_sha256=FAKE_SHA,
+            legal_sharia_ref=APPROVED_SYNTHETIC,
+            legs=(UnwindLeg(leg_id="LEG-abcdefgh",asset_id="ASSET-abcdefgh",
+                level="L1",movement="RETURN_TO_COUNTERPARTY",post_haircut_value=Decimal("1"),
+                counted_in_current_stock=True,security_eligibility_ref=APPROVED_SYNTHETIC,
+                independent_price_ref=APPROVED_SYNTHETIC,custody_encumbrance_ref=APPROVED_SYNTHETIC,
+                source_sha256=FAKE_SHA),
+                UnwindLeg(leg_id="LEG-abcdefgi",asset_id="ASSET-abcdefgi",
+                level="L2A",movement="RETURN_FROM_COUNTERPARTY",post_haircut_value=Decimal("1"),
+                counted_in_current_stock=False,security_eligibility_ref=APPROVED_SYNTHETIC,
+                independent_price_ref=APPROVED_SYNTHETIC,custody_encumbrance_ref=APPROVED_SYNTHETIC,
+                source_sha256=FAKE_SHA))),))
+    sft_policy = replace(scope(),has_unwind_transactions=True,sft_ledger=ledger)
+    prepared_sft = prepare_lcr(files=fixture_files(), governance=governance,
+        reporting_date=D,reporting_currency="IDR",source_policy=sft_policy)
+    result = _lcr_calculator(prepared_sft.input_snapshot,prepared_sft.parameter_snapshot)
+    assert result["adjusted_level1"] == stock["L1"] - Decimal(1)
+    assert result["adjusted_level2a"] == stock["L2A"] + Decimal(1)
+    assert result["sft_ledger_sha256"] == sha256_canonical(ledger)
+    rid = create_evidence_bound_lcr_run(session=db,maker_subject="maker",
+        prepared=prepared_sft,engine_version=ENGINE)
+    assert db.get(SFTRunLedger,rid).trade_count == 1
+    run = RunService(db,"maker")._get(rid,"VALIDATED")
+    assert verify_sft_ledger_bound(db,run)==sha256_canonical(ledger)
+    RunService(db,"maker").submit(rid)
+    RunService(db,"checker").approve(rid)
+    assert RunService(db,"audit").reproduce(rid,calculator=_lcr_calculator,
+                                           engine_version=ENGINE) == run.result_sha256
+    db.commit()
+    with pytest.raises(DatabaseError):
+        db.execute(text("DELETE FROM lrm_sft_run_ledger WHERE run_id=:rid"),{"rid":rid})
+    db.rollback()
+
+
+def test_working_paper_category_differential_on_integrated_lcr_synthetic(db):
+    """No real Bank papers available: controlled synthetic reference only."""
+    import hashlib
+    from lrm_engine.common.canonical import canonical_json
+    from lrm_services.lcr_differential import parse_working_paper_bytes,compare_working_paper
+    from lrm_services.lcr_differential import WorkingPaperError
+
+    batch=prepared(db)
+    engine=_lcr_calculator(batch.input_snapshot,batch.parameter_snapshot)
+    fields=("hqla","outflow","inflow_raw","inflow_used","net_cash_outflow","lcr",
+            "level1","level2a","level2b","adjusted_level1","adjusted_level2a","adjusted_level2b")
+    rules={}
+    for rule,source_digest,amount in engine["trace"]:
+        assert len(source_digest)==64
+        rules[rule]=rules.get(rule,Decimal(0))+amount
+    paper={"reporting_date":D.isoformat(),"currency":"IDR",
+           "measures":{k:engine[k] for k in fields},"rule_amounts":rules}
+    data=canonical_json(paper)
+    bank=parse_working_paper_bytes(data,expected_sha256=hashlib.sha256(data).hexdigest(),
+             approved_ref=APPROVED_SYNTHETIC,bank_approved_sha256=FAKE_SHA,synthetic_only=True)
+    matched=compare_working_paper(bank=bank,engine=engine,reporting_date=D,currency="IDR",
+        monetary_tolerance=Decimal("0"),ratio_tolerance=Decimal("0"),
+        tolerance_approval_ref=APPROVED_SYNTHETIC)
+    assert matched.status=="PASS"
+    mismatch=dict(engine)
+    mismatch["hqla"]=engine["hqla"]+Decimal(1)
+    failed=compare_working_paper(bank=bank,engine=mismatch,reporting_date=D,currency="IDR",
+        monetary_tolerance=Decimal("0"),ratio_tolerance=Decimal("0"),
+        tolerance_approval_ref=APPROVED_SYNTHETIC)
+    assert failed.status=="FAILED"
+    mismatch["trace"]=()
+    with pytest.raises(WorkingPaperError):
+        compare_working_paper(bank=bank,engine=mismatch,reporting_date=D,currency="IDR",
+            monetary_tolerance=Decimal("0"),ratio_tolerance=Decimal("0"),
+            tolerance_approval_ref=APPROVED_SYNTHETIC)

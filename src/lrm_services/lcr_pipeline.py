@@ -7,6 +7,7 @@ model certification. Excel raw bytes are never logged or embedded in run snapsho
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import json
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Mapping, Sequence
@@ -14,8 +15,9 @@ from typing import Mapping, Sequence
 from lrm_data.loader import LoadedSource
 from lrm_data.reconciliation import ReconEntry, ReconPolicy, ReconReport, reconcile_three_layers
 from lrm_data.schema import DatasetType
-from lrm_engine.common.canonical import sha256_canonical
+from lrm_engine.common.canonical import canonical_json, sha256_canonical
 from lrm_engine.common.decimal_math import as_decimal
+from lrm_engine.lcr.sft_ledger import SFTLedger, ledger_from_snapshot
 from lrm_services.akad_gateway import SOURCE_KEY_FIELDS, validate_batch_with_mapping
 from lrm_services.governance import GovernanceService
 
@@ -58,6 +60,7 @@ class LCRSourcePolicy:
     has_unwind_transactions: bool
     unwind_review_ref: str
     recon_policy: ReconPolicy
+    sft_ledger: SFTLedger | None = None
 
     def __post_init__(self) -> None:
         from lrm_engine.lcr.calculator import HASH64
@@ -67,8 +70,10 @@ class LCRSourcePolicy:
         if (not self.scope_approval_ref.strip() or not self.unwind_review_ref.strip()
                 or not HASH64.fullmatch(self.scope_document_sha256)):
             raise LCRGateError("GL scope and unwind review require source evidence")
-        if self.has_unwind_transactions:
-            raise LCRGateError("Adjusted-unwind treatment not certified; block LCR run")
+        if self.has_unwind_transactions and self.sft_ledger is None:
+            raise LCRGateError("SFT unwind requires complete collateral ledger")
+        if not self.has_unwind_transactions and self.sft_ledger is not None:
+            raise LCRGateError("Unwind ledger contradicts no-SFT declaration")
 
 
 @dataclass(frozen=True)
@@ -195,8 +200,14 @@ def _lcr_calculator(inputs: dict[str, object], params: dict[str, object]) -> dic
             incoming.append(RegulatoryLeg(**common))
         else:
             raise LCRGateError("Unexpected LCR leg category")
+    ledger = ledger_from_snapshot(inputs["sft_ledger"]) if inputs.get("sft_ledger") is not None else None  # type: ignore[arg-type]
+    reporting_date = inputs["reporting_date"]
+    if isinstance(reporting_date, str):
+        reporting_date = date.fromisoformat(reporting_date)
     result = calculate_lcr(hqla=hqla, outflows=out, inflows=incoming,
-                           factors=factors, has_unwind_transactions=inputs["has_unwind_transactions"])  # type: ignore[arg-type]
+        factors=factors, has_unwind_transactions=inputs["has_unwind_transactions"],  # type: ignore[arg-type]
+        sft_ledger=ledger, reporting_date=reporting_date,  # type: ignore[arg-type]
+        reporting_currency=inputs["reporting_currency"])  # type: ignore[arg-type]
     return asdict(result)
 
 
@@ -251,14 +262,28 @@ def prepare_lcr(*, files: Mapping[str, bytes], governance: GovernanceService,
                     "scope_document_sha256": source_policy.scope_document_sha256,
                     "unwind_review_ref": source_policy.unwind_review_ref,
                     "reconciliation_policy": asdict(source_policy.recon_policy)}
-    inputs: dict[str, object] = {"legs": legs, "has_unwind_transactions": False,
-                                  "reporting_date": reporting_date, "reporting_currency": reporting_currency}
+    inputs: dict[str, object] = {"legs": legs,
+         "has_unwind_transactions": source_policy.has_unwind_transactions,
+         "reporting_date": reporting_date, "reporting_currency": reporting_currency}
+    if source_policy.sft_ledger is not None:
+        # Embed only pseudonymized trade/asset parcels, never counterparty PII.
+        inputs["sft_ledger"] = json.loads(canonical_json(source_policy.sft_ledger))
+        inputs["sft_ledger_sha256"] = sha256_canonical(source_policy.sft_ledger)
+        source_scope["sft_ledger_sha256"] = inputs["sft_ledger_sha256"]
     params: dict[str, object] = {"factors": factor_info, "parameter_set_hash": parameter_hash}
+    if source_policy.has_unwind_transactions:
+        # Fail closed before any run is created if maturity/collateral/stock is inconsistent.
+        calculated = _lcr_calculator(inputs, params)
+        if calculated["sft_ledger_sha256"] != inputs.get("sft_ledger_sha256"):
+            raise LCRGateError("SFT calculation/source proof mismatch")
     proof: dict[str, object] = {"status": "ENGINEERING_UNVERIFIED", "dq": dq,
          "recon": recon, "source_file_sha256": hashes,
          "mapping_sha256": mapping_hash, "scope": source_scope,
          "rule_ledger": mapping_info, "parameter_set_hash": parameter_hash,
          "reporting_date": reporting_date}
+    if source_policy.sft_ledger is not None:
+        proof["sft_ledger_sha256"] = inputs["sft_ledger_sha256"]
+        proof["sft_source_sha256"] = source_policy.sft_ledger.source_batch_sha256
     return PreparedLCR(reporting_date, inputs, params, dq, recon, proof, mapping_hash, hashes)
 
 
@@ -281,6 +306,10 @@ def create_evidence_bound_lcr_run(*, session: object, maker_subject: str,
                      akad_mapping_version=prepared.mapping_hash,
                      input_data=prepared.input_snapshot, parameters=prepared.parameter_snapshot)
     attach_lcr_proof(session, maker_subject, run, prepared.evidence)  # type: ignore[arg-type]
+    if prepared.input_snapshot["has_unwind_transactions"]:
+        from lrm_services.sft_repository import attach_sft_ledger
+        ledger = ledger_from_snapshot(prepared.input_snapshot["sft_ledger"])  # type: ignore[arg-type]
+        attach_sft_ledger(session, maker_subject, run, ledger)  # type: ignore[arg-type]
     if prepared.data_quality["status"] == "PASS" and prepared.reconciliation["status"] == "PASS":
         svc.validate(run.id, calculator=_lcr_calculator, dq_passed=True, reconciliation_passed=True)
     return run.id
