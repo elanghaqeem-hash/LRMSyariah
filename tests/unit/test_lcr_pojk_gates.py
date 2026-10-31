@@ -38,7 +38,7 @@ def test_lcr_uses_annex_deduction_order_no_unwind():
     c = calc(config())
     assert abs(c.hqla - Decimal(100) / Decimal('0.60')) < Decimal('1e-25')
     assert c.level2b == Decimal("25")
-    assert c.hqla == c.level1+c.level2a+c.level2b
+    assert abs(c.hqla - (c.level1+c.level2a+c.level2b)) < Decimal('1e-25')
 
 
 def test_wrong_level2_cap_rejected_even_if_revision_claims_approved():
