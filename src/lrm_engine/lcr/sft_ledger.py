@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal, localcontext
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 from lrm_engine.common.canonical import sha256_canonical
 from lrm_engine.common.decimal_math import ENGINE_CONTEXT, as_decimal
