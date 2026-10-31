@@ -1,0 +1,3 @@
+<PARSED TEXT FOR SHEET: 1 / 1 TABS
+TAB NAME: parallel-run-template.csv>
+index,reporting_date,bank_working_paper_ref,bank_sha256,engine_commit_sha,engine_parameter_revision,akad_revision,source_batch_hash,bank_hqla,engine_hqla,bank_outflows,engine_outflows,bank_inflows,engine_inflows,bank_nco,engine_nco,bank_lcr,engine_lcr,delta_amount,delta_ratio_pp,reconciliation_status,exception_ref,correction_ref,maker_ref,checker_ref,risk_acceptance_ref

@@ -44,3 +44,9 @@ Tidak ada implementasi aplikasi atau integrasi sinkronisasi percakapan yang dikl
 - AuditEvent append-only, canonical SHA-256 chain; restricted PostgreSQL role and externally anchored hash required before production.
 - Only approved runs may be reproduced on exact semver+git SHA engine.
 - Synthetic SQLite test doubles are not evidence of production PostgreSQL security.
+
+## ADR-0004 — OJK LCR cap mathematical model & SFT evidence (31 Oct 2026)
+**Status: engineering math implemented, regulatory and Bank release HOLD.**
+- Use exact POJK20/2025 BUS/UUS Lampiran I III.C 2B then Level2 deductions; post-haircut Decimal and provenance.
+- Prohibit caller-provided SFT adjusted levels from being treated as certified. Until Bank source/contract/eligible collateral ledger plus independent validation exist, engine `has_unwind_transactions=True` remains fail-closed.
+- Public repository stores no actual Bank GL, working papers or signatures. SSO/vault verification and human SKMR/Finance/DPS/TI approvals cannot be replaced by CI.

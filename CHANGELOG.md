@@ -37,3 +37,9 @@ Seluruh perubahan teknis substantif yang telah di-commit ke repository harus dic
 - Bank-declared GL scope/sign and tolerance; source-to-GL/classifier gross reconciliation with persistent exception cases.
 - Immutable input/parameter/source/mapping/DQ/recon proof bound to WP3 LCR CalculationRun, PostgreSQL migration 0003 plus legacy boolean bypass prevention and synthetic tests.
 - Reporting/model/adjusted-unwind/SSO/production gate remain HOLD pending regulator annex detail and Bank sign-off.
+
+### POJK 20/2025 Annex I regulatory gap review — 2026-10-31
+- Added source-anchored LCR control matrix for 20 categories and explicit Bank evidence HOLD.
+- Replaced simplified HQLA cap allocation with exact Annex I III.C two-deduction calculation (no unwind path), 15/85, 15/60 and 2/3 ratios using Decimal.
+- Enforce official HQLA cap factors 40% and 15%, L1/L2A haircut arithmetic; SFT unwind continues to fail closed until approved transaction ledger.
+- Added isolated real PostgreSQL 16 CI smoke, synthetic negative tests, independent validation/parallel-run framework. Bank PostgreSQL/working papers/signoff NOT available.
